@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "259687303472",
+    "project_id": "keepingfit-ea291",
+    "storage_bucket": "keepingfit-ea291.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259687303472:android:ec4c13c1d724cb2b01e0f5",
+        "android_client_info": {
+          "package_name": "com.VivianRMS.keeping_fit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDveGZnBy-1CXxmEk9I8SSJDcwHxogg3ks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
