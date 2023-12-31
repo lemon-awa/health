@@ -64,84 +64,84 @@ class _GoalsTabState extends State<GoalsTab> {
           SizedBox(
             height: 10.0,
           ),
-          Expanded(
-              child: FutureBuilder<QuerySnapshot>(
-                  future: FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(widget.docID)
-                      .collection('goal')
-                      .get(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(
-                          child: Text(
-                        "Error: ${snapshot.error}",
-                        style: TextStyle(color: Colors.white),
-                      ));
-                    } else if (snapshot.hasData) {
-                      if (snapshot.data!.docs.isEmpty) {
-                        return Center(
-                            child: Text(
-                          "No goals found",
-                          style: TextStyle(color: Colors.white),
-                        ));
-                      }
-                      if (_isOpen!.isEmpty) {
-                        _isOpen = List.generate(snapshot.data!.docs.length,
-                            (index) => (index == 0));
-                      }
-                      return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.0),
-                          child: ListView(children: [
-                            ExpansionPanelList(
-                              expansionCallback: (panelIndex, isExpanded) {
-                                setState(() {
-                                  _isOpen![panelIndex] = isExpanded;
-                                });
-                              },
-                              children: snapshot.data!.docs
-                                  .asMap()
-                                  .entries
-                                  .map<ExpansionPanel>((entry) {
-                                int index = entry.key;
-                                QueryDocumentSnapshot doc = entry.value;
-                                return ExpansionPanel(
-                                  backgroundColor:
-                                      Color.fromARGB(255, 178, 173, 173),
-                                  headerBuilder:
-                                      (BuildContext context, bool isExpanded) {
-                                    return ListTile(
-                                      title: Text(doc['final'],
-                                          style: TextStyle(
-                                              color: Colors
-                                                  .white)), // Replace with your document field
-                                    );
-                                  },
-                                  body: Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            'Details for ${doc['final']}', // Replace with your details
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      )),
-                                  isExpanded: _isOpen![index],
-                                );
-                              }).toList(),
-                              // Replace with your document field
-                              // Add other fields or widgets as needed
-                            ),
-                          ]));
-                    } else {
-                      return Center(child: Text("No data available"));
-                    }
-                  }))
-        ],
+        //   Expanded(
+        //       child: FutureBuilder<QuerySnapshot>(
+        //           future: FirebaseFirestore.instance
+        //               .collection('users')
+        //               .doc(widget.docID)
+        //               .collection('goal')
+        //               .get(),
+        //           builder: (context, snapshot) {
+        //             if (snapshot.connectionState == ConnectionState.waiting) {
+        //               return Center(child: CircularProgressIndicator());
+        //             } else if (snapshot.hasError) {
+        //               return Center(
+        //                   child: Text(
+        //                 "Error: ${snapshot.error}",
+        //                 style: TextStyle(color: Colors.white),
+        //               ));
+        //             } else if (snapshot.hasData) {
+        //               if (snapshot.data!.docs.isEmpty) {
+        //                 return Center(
+        //                     child: Text(
+        //                   "No goals found",
+        //                   style: TextStyle(color: Colors.white),
+        //                 ));
+        //               }
+        //               if (_isOpen!.isEmpty) {
+        //                 _isOpen = List.generate(snapshot.data!.docs.length,
+        //                     (index) => (index == 0));
+        //               }
+        //               return Padding(
+        //                   padding: EdgeInsets.symmetric(horizontal: 20.0),
+        //                   child: ListView(children: [
+        //                     ExpansionPanelList(
+        //                       expansionCallback: (panelIndex, isExpanded) {
+        //                         setState(() {
+        //                           _isOpen![panelIndex] = isExpanded;
+        //                         });
+        //                       },
+        //                       children: snapshot.data!.docs
+        //                           .asMap()
+        //                           .entries
+        //                           .map<ExpansionPanel>((entry) {
+        //                         int index = entry.key;
+        //                         QueryDocumentSnapshot doc = entry.value;
+        //                         return ExpansionPanel(
+        //                           backgroundColor:
+        //                               Color.fromARGB(255, 178, 173, 173),
+        //                           headerBuilder:
+        //                               (BuildContext context, bool isExpanded) {
+        //                             return ListTile(
+        //                               title: Text(doc['final'],
+        //                                   style: TextStyle(
+        //                                       color: Colors
+        //                                           .white)), // Replace with your document field
+        //                             );
+        //                           },
+        //                           body: Padding(
+        //                               padding: EdgeInsets.all(16.0),
+        //                               child: Column(
+        //                                 children: [
+        //                                   Text(
+        //                                     'Details for ${doc['final']}', // Replace with your details
+        //                                     style:
+        //                                         TextStyle(color: Colors.white),
+        //                                   ),
+        //                                 ],
+        //                               )),
+        //                           isExpanded: _isOpen![index],
+        //                         );
+        //                       }).toList(),
+        //                       // Replace with your document field
+        //                       // Add other fields or widgets as needed
+        //                     ),
+        //                   ]));
+        //             } else {
+        //               return Center(child: Text("No data available"));
+        //             }
+        //           }))
+         ],
       ),
     );
   }

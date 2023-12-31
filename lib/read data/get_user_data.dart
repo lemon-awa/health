@@ -53,7 +53,7 @@ class _GetUserDataState extends State<GetUserData>
                                   Icon(
                                     Icons.account_circle,
                                     size: 95,
-                                    color: Color.fromARGB(255, 178, 173, 173),
+                                    color: Color.fromARGB(255, 188, 218, 203),
                                   ),
                                   Text(
                                     data['usrname'].toString().toUpperCase(),
@@ -67,7 +67,7 @@ class _GetUserDataState extends State<GetUserData>
                               ),
                             ),
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Row(
                                   mainAxisAlignment:
