@@ -19,30 +19,34 @@ class _SetGoalPageState extends State<SetGoalPage> {
   String? subType;
 
   List<String> mainTypes = ['sports', 'food', 'sleep'];
-  Map<String, List<String>> subTypes = {
-    'sports': ['lose weight', 'muscle building'],
-    'food': ['lose weight', 'muscle building'],
-  };
+  List<String> subTypes = ['lose weight', 'muscle building'];
+  // Map<String, List<String>> subTypes = {
+  //   'sleep': [],
+  //   'sports': ['lose weight', 'muscle building'],
+  //   'food': ['lose weight', 'muscle building'],
+  // };
 
   @override
   void dispose() {
     super.dispose();
   }
 
-  Future addGoalDetails(String mainType, String? subType) async {
+  Future<String> addGoalDetails(String mainType, String? subType) async {
     String goalType = subType != null ? '$mainType - $subType' : mainType;
-    await FirebaseFirestore.instance
+    print(subType);
+    DocumentReference docRef = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.docID)
         .collection('goal')
         .add({
       'type': goalType,
     });
+    return docRef.id;
   }
 
   @override
   Widget build(BuildContext context) {
-    List<String>? currentSubTypes = subTypes[mainType];
+    // List<String>? currentSubTypes = subTypes[mainType];
     bool shouldShowSubType = mainType == 'sports' || mainType == 'food';
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
@@ -78,19 +82,24 @@ class _SetGoalPageState extends State<SetGoalPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 28.0),
                 child: DropdownButtonFormField<String>(
                   value: mainType,
-                  items: mainTypes.map<DropdownMenuItem<String>>((String value) {
+                  items:
+                      mainTypes.map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(
                         value,
-                        style: TextStyle(color:Colors.white),
+                        style: TextStyle(color: Colors.white),
                       ),
                     );
                   }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
                       mainType = newValue!;
-                      subType = currentSubTypes?.first;
+                      // currentSubTypes = subTypes[mainType];
+                      // subType = currentSubTypes?.first;
+                      shouldShowSubType =
+                          mainType == 'sports' || mainType == 'food';
+                      print("100 " + mainType);
                     });
                   },
                   decoration: InputDecoration(
@@ -98,29 +107,31 @@ class _SetGoalPageState extends State<SetGoalPage> {
                     fillColor: Color.fromARGB(255, 47, 46, 46),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
+                      borderSide:
+                          BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white), // 设置获得焦点时的边框颜色为白色
+                      borderSide:
+                          BorderSide(color: Colors.white), // 设置获得焦点时的边框颜色为白色
                     ),
                   ),
                   dropdownColor: Color.fromARGB(255, 47, 46, 46),
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-              if (shouldShowSubType && currentSubTypes != null)
+              if (shouldShowSubType)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28.0),
                   child: DropdownButtonFormField<String>(
                     value: subType,
-                    items: currentSubTypes
-                        .map<DropdownMenuItem<String>>((String value) {
+                    items:
+                        subTypes.map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(
                           value,
-                          style: TextStyle(color:Colors.white),
+                          style: TextStyle(color: Colors.white),
                         ),
                       );
                     }).toList(),
@@ -134,11 +145,13 @@ class _SetGoalPageState extends State<SetGoalPage> {
                       fillColor: Color.fromARGB(255, 47, 46, 46),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
+                        borderSide:
+                            BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.white), // 设置获得焦点时的边框颜色为白色
+                        borderSide:
+                            BorderSide(color: Colors.white), // 设置获得焦点时的边框颜色为白色
                       ),
                     ),
                     dropdownColor: Color.fromARGB(255, 47, 46, 46),
@@ -150,13 +163,17 @@ class _SetGoalPageState extends State<SetGoalPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed:() async {
-          await addGoalDetails(mainType, subType);
+        onPressed: () async {
+          String goalID = await addGoalDetails(mainType, subType);
           // Navigator.pop(context);
-          if(mainType == 'sleep'){
+          if (mainType == 'sleep') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => sleepTemplatePage(docID:widget.docID)),
+              MaterialPageRoute(
+                  builder: (context) => sleepTemplatePage(
+                        docID: widget.docID,
+                        goalID: goalID,
+                      )),
             );
           }
           // else if (mainType == 'sports') {

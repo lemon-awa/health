@@ -4,49 +4,26 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:keeping_fit/goal/sleepTemplate.dart';
 
-class sleepTemplatePage extends StatefulWidget {
+class SleepEdit extends StatefulWidget {
   final String docID;
   final String goalID;
-  const sleepTemplatePage(
-      {super.key, required this.docID, required this.goalID});
+  const SleepEdit({super.key, required this.docID, required this.goalID});
 
   @override
-  State<sleepTemplatePage> createState() => _sleepTemplatePageState();
+  State<SleepEdit> createState() => _SleepEditState();
 }
 
-class PlanDetails {
-  String planContext;
-  DateTime whenToEnd;
-  int mintimes;
-  int complete;
-  bool isSaved;
-  String? docID;
-  TextEditingController dateController;
-
-  PlanDetails({
-    this.planContext = '',
-    required this.whenToEnd,
-    this.mintimes = 0,
-    this.complete = 0,
-    this.isSaved = false,
-    this.docID,
-  }) : dateController = TextEditingController(
-            text: DateFormat('yyyy-MM-dd').format(whenToEnd));
-
-  Map<String, dynamic> toMap() {
-    return {
-      'planContext': planContext,
-      'whenToEnd': whenToEnd,
-      'minimumCompletion': mintimes,
-      'complete': complete,
-    };
-  }
-}
-
-class _sleepTemplatePageState extends State<sleepTemplatePage> {
+class _SleepEditState extends State<SleepEdit> {
   final _goalNameController = TextEditingController();
   List<PlanDetails> plans = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadGoalAndPlans();
+  }
 
   @override
   void dispose() {
@@ -54,22 +31,37 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
     super.dispose();
   }
 
-  void addPlan() {
-    setState(() {
-      plans.add(PlanDetails(whenToEnd: DateTime.now()));
-    });
-  }
-
-  Future addGoal() async {
-    String goalName = _goalNameController.text;
-    await FirebaseFirestore.instance
+  void loadGoalAndPlans() async {
+    var goalDocument = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.docID)
         .collection('goal')
         .doc(widget.goalID)
-        .set({
-      'goalName': goalName,
-    }, SetOptions(merge: true));
+        .get();
+    _goalNameController.text = goalDocument['goalName'];
+    print(goalDocument['goalName']);
+
+    var planDocument = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.docID)
+        .collection('goal')
+        .doc(widget.goalID)
+        .collection('plans')
+        .get();
+
+    setState(() {
+      plans = planDocument.docs.map((doc) {
+        var planData = doc.data();
+        print(planData['planContext']);
+        return PlanDetails(
+          planContext: planData['planContext'],
+          whenToEnd: (planData['whenToEnd'] as Timestamp).toDate(),
+          mintimes: planData['minimumCompletion'],
+          isSaved: true,
+          docID: doc.id,
+        );
+      }).toList();
+    });
   }
 
   void savePlans() async {
@@ -114,7 +106,25 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
     // );
   }
 
-///////////////////////////////////////
+  void addPlan() {
+    setState(() {
+      plans.add(PlanDetails(whenToEnd: DateTime.now()));
+    });
+  }
+
+  Future addGoal() async {
+    String goalName = _goalNameController.text;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.docID)
+        .collection('goal')
+        .doc(widget.goalID)
+        .set({
+      'goalName': goalName,
+    }, SetOptions(merge: true));
+  }
+  
+
   @override
   Widget _buildTextField(TextEditingController controller, String hintText,
       {Function(String)? onChanged, required PlanDetails plan}) {
@@ -247,7 +257,7 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
                     plan.isSaved = false;
                   }
                   // print(plan.mintimes);
-                  // print(tempMintimes);
+                  print(tempMintimes);
                   plan.mintimes = tempMintimes;
                 });
               },
@@ -323,18 +333,15 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       appBar: AppBar(
-        title: Text(
-          'Set Sleep Goal',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: const Color.fromARGB(255, 158, 49, 178),
+        title: Text('Edit Goal'),
+        backgroundColor: Colors.grey,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 0.0),
+            child: Center(
+              child: Column(children: [
                 Icon(
                   Icons.bed_outlined,
                   size: 80,
@@ -346,26 +353,29 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
                     controller: _goalNameController,
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Goal Name',
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                      ),
+                      labelText: 'Goal Name',
+                      border: OutlineInputBorder(),
                       fillColor: Color.fromARGB(255, 47, 46, 46),
-                      filled: true,
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                              color: Color.fromARGB(255, 31, 30, 30))),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.white)),
+                        filled: true,
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 31, 30, 30))),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.white)),
                     ),
                   ),
                 ),
                 SizedBox(height: 10.0),
-                for (var plan in plans) ...[
-                  _buildPlanCard(plan),
-                ],
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: plans.length,
+                  itemBuilder: (context, index) {
+                    return _buildPlanCard(plans[index]);
+                  },
+                ),
                 ElevatedButton(
                   onPressed: addPlan,
                   child: Icon(Icons.add),
@@ -386,7 +396,7 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
                   },
                   child: Text('Save Plan'),
                 ),
-              ],
+              ]),
             ),
           ),
         ),
