@@ -176,12 +176,17 @@ class _SetGoalPageState extends State<SetGoalPage> {
                       )),
             );
           }
-          // else if (mainType == 'sports') {
-          //   Navigator.push(
-          //     context,
-          //     MaterialPageRoute(builder: (context) => SportsTemplatePage()),
-          //   );
-          // } else if (mainType == 'food') {
+          else if (mainType == 'sports') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => sportsTemplatePage(
+                        docID: widget.docID,
+                        goalID: goalID,
+                      )),
+            );
+          } 
+          // else if (mainType == 'food') {
           //   Navigator.push(
           //     context,
           //     MaterialPageRoute(builder: (context) => FoodTemplatePage()),

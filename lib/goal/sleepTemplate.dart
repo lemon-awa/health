@@ -20,6 +20,9 @@ class PlanDetails {
   DateTime whenToEnd;
   int mintimes;
   int complete;
+  String selectionOption;
+  int goalduration;
+  int completegoalduration = 0;
   bool isSaved;
   String? docID;
   TextEditingController dateController;
@@ -29,6 +32,9 @@ class PlanDetails {
     required this.whenToEnd,
     this.mintimes = 0,
     this.complete = 0,
+    this.selectionOption = 'frequency',
+    this.goalduration = 0,
+    this.completegoalduration = 0,
     this.isSaved = false,
     this.docID,
   }) : dateController = TextEditingController(
@@ -40,9 +46,13 @@ class PlanDetails {
       'whenToEnd': whenToEnd,
       'minimumCompletion': mintimes,
       'complete': complete,
+      'select': selectionOption,
+      'duration': goalduration,
+      'completesports': completegoalduration,
     };
   }
 }
+
 
 class _sleepTemplatePageState extends State<sleepTemplatePage> {
   final _goalNameController = TextEditingController();
@@ -213,7 +223,7 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
           children: [
             Expanded(
               child: Container(
-                height: 100, // 调整滚轮高度
+                height: 75,
                 padding: EdgeInsets.symmetric(horizontal: 28.0), // 添加左边距
                 child: CupertinoPicker(
                   itemExtent: 32.0,

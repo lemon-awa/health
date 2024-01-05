@@ -36,12 +36,14 @@ class _GoalsTabState extends State<GoalsTab> {
     });
   }
 
+// delete plan
   Future<void> deletePlanFromFirebase(
       DocumentSnapshot doc, String planId) async {
     await doc.reference.collection('plans').doc(planId).delete();
     refreshGoals();
   }
 
+// delete goal and plan
   Future<void> deleteGoal(DocumentSnapshot goalDoc) async {
     QuerySnapshot planSnapshot =
         await goalDoc.reference.collection('plans').get();
@@ -50,6 +52,337 @@ class _GoalsTabState extends State<GoalsTab> {
     }
     await goalDoc.reference.delete();
     refreshGoals();
+  }
+
+// create goal name and delete
+  Widget createListTile(BuildContext context, QueryDocumentSnapshot doc) {
+    return ListTile(
+      title: Row(
+        children: [
+          IconButton(
+            onPressed: () async {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Confirm delete'),
+                      content: Text(
+                          'Are you sure to delete this goal including all plans under it'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            deleteGoal(doc);
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Delete'),
+                        ),
+                      ],
+                    );
+                  });
+            },
+            icon: Icon(Icons.delete),
+          ),
+          Expanded(
+            child: Text(
+              doc['goalName'],
+              style: TextStyle(
+                  color: Color.fromARGB(255, 0, 0, 0),
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Rainbow',
+                  fontSize: 28.0),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// punch
+  Future<void> SleepPunchPlan(
+      BuildContext context, DocumentSnapshot planDoc) async {
+    bool confirmed = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Confirm Punch'),
+              content: Text('Do you want to punch this plan?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (confirmed) {
+      await planDoc.reference.update({'complete': FieldValue.increment(1)});
+      refreshGoals();
+    }
+  }
+
+// plan context
+  Widget createPlanContext(
+      BuildContext context,
+      QueryDocumentSnapshot doc,
+      Map<String, dynamic> plansData,
+      String docID,
+      DocumentSnapshot planDoc,
+      String goalID) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            plansData['planContext'] ?? 'No Context',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+          ),
+        ),
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      SleepEdit(docID: docID, goalID: goalID)),
+            ).then((_) => refreshGoals());
+          },
+          icon: Icon(Icons.edit),
+        ),
+        IconButton(
+          onPressed: () async {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text("Confirm Delete"),
+                  content: Text('Are you sure you want to delete this plan'),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      child: Text("Delete"),
+                      onPressed: () {
+                        deletePlanFromFirebase(doc, planDoc.id);
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          icon: Icon(Icons.delete),
+        ),
+      ],
+    );
+  }
+
+// No plan exist
+  Widget noPlanWidget(BuildContext context, String docID, String goalID) {
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'No plan exists',
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SleepEdit(docID: docID, goalID: goalID),
+                ),
+              ).then((_) {
+                refreshGoals();
+              });
+            },
+            icon: Icon(Icons.edit),
+          ),
+        ],
+      ),
+    );
+  }
+
+// plan card
+  @override
+  ExpansionPanel createSleep(QueryDocumentSnapshot doc, int index) {
+    return ExpansionPanel(
+      backgroundColor: Color.fromARGB(179, 239, 219, 236),
+      headerBuilder: (BuildContext context, bool isExpanded) {
+        return createListTile(context, doc);
+      },
+      body: FutureBuilder<QuerySnapshot>(
+        future: doc.reference.collection('plans').get(),
+        builder: (context, PlansSnapshot) {
+          if (PlansSnapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          }
+          if (PlansSnapshot.hasData && PlansSnapshot.data!.docs.isNotEmpty) {
+            return Column(
+              children: PlansSnapshot.data!.docs.map((planDoc) {
+                Map<String, dynamic> plansData =
+                    planDoc.data() as Map<String, dynamic>;
+                return GestureDetector(
+                  onTap: () async {
+                    await SleepPunchPlan(context, planDoc);
+                  },
+                  child: Container(
+                    margin:
+                        EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(136, 239, 205, 221),
+                      border: Border.all(color: Colors.grey, width: 2.0),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: ListTile(
+                      title: createPlanContext(context, doc, plansData,
+                          widget.docID, planDoc, doc.id),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                              'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
+                          Text(
+                              'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          }
+          return noPlanWidget(context, widget.docID, doc.id);
+        },
+      ),
+      isExpanded: _isOpen![index],
+    );
+  }
+
+  @override
+  ExpansionPanel createSports(QueryDocumentSnapshot doc, int index) {
+    return ExpansionPanel(
+      backgroundColor: Color.fromARGB(179, 239, 219, 236),
+      headerBuilder: (BuildContext context, bool isExpanded) {
+        return createListTile(context, doc);
+      },
+      body: FutureBuilder<QuerySnapshot>(
+        future: doc.reference.collection('plans').get(),
+        builder: (context, PlansSnapshot) {
+          if (PlansSnapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          }
+          if (PlansSnapshot.hasData && PlansSnapshot.data!.docs.isNotEmpty) {
+            return Column(
+              children: PlansSnapshot.data!.docs.map((planDoc) {
+                Map<String, dynamic> plansData =
+                    planDoc.data() as Map<String, dynamic>;
+                return GestureDetector(
+                  onTap: () async {
+                    await SleepPunchPlan(context, planDoc);
+                  },
+                  child: Container(
+                    margin:
+                        EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(136, 239, 205, 221),
+                      border: Border.all(color: Colors.grey, width: 2.0),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: ListTile(
+                      title: createPlanContext(context, doc, plansData,
+                          widget.docID, planDoc, doc.id),
+                      // subtitle: Column(
+                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                      //   children: [
+                      //     Text(
+                      //         'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
+                      //     Text(
+                      //         'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
+                      //   ],
+                      // ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          }
+          return noPlanWidget(context, widget.docID, doc.id);
+        },
+      ),
+      isExpanded: _isOpen![index],
+    );
+  }
+
+  @override
+  ExpansionPanel createFood(QueryDocumentSnapshot doc, int index) {
+    return ExpansionPanel(
+      backgroundColor: Color.fromARGB(179, 239, 219, 236),
+      headerBuilder: (BuildContext context, bool isExpanded) {
+        return createListTile(context, doc);
+      },
+      body: FutureBuilder<QuerySnapshot>(
+        future: doc.reference.collection('plans').get(),
+        builder: (context, PlansSnapshot) {
+          if (PlansSnapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          }
+          if (PlansSnapshot.hasData && PlansSnapshot.data!.docs.isNotEmpty) {
+            return Column(
+              children: PlansSnapshot.data!.docs.map((planDoc) {
+                Map<String, dynamic> plansData =
+                    planDoc.data() as Map<String, dynamic>;
+                return GestureDetector(
+                  onTap: () async {
+                    await SleepPunchPlan(context, planDoc);
+                  },
+                  child: Container(
+                    margin:
+                        EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(136, 239, 205, 221),
+                      border: Border.all(color: Colors.grey, width: 2.0),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: ListTile(
+                      title: createPlanContext(context, doc, plansData,
+                          widget.docID, planDoc, doc.id),
+                      // subtitle: Column(
+                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                      //   children: [
+                      //     Text(
+                      //         'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
+                      //     Text(
+                      //         'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
+                      //   ],
+                      // ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          }
+          return noPlanWidget(context, widget.docID, doc.id);
+        },
+      ),
+      isExpanded: _isOpen![index],
+    );
   }
 
   @override
@@ -143,215 +476,16 @@ class _GoalsTabState extends State<GoalsTab> {
                                   .map<ExpansionPanel>((entry) {
                                 int index = entry.key;
                                 QueryDocumentSnapshot doc = entry.value;
-                                return ExpansionPanel(
-                                  backgroundColor:
-                                      Color.fromARGB(179, 239, 219, 236),
-                                  headerBuilder:
-                                      (BuildContext context, bool isExpanded) {
-                                    return ListTile(
-                                      title: Row(
-                                        children: [
-                                          IconButton(
-                                            onPressed: () async {
-                                              showDialog(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) {
-                                                    return AlertDialog(
-                                                      title: Text(
-                                                          'Confrim delete'),
-                                                      content: Text(
-                                                          'Are you sure to delete this goal includes all plans under it'),
-                                                      actions: <Widget>[
-                                                        TextButton(
-                                                          onPressed: () {
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop();
-                                                          },
-                                                          child: Text('Cancel'),
-                                                        ),
-                                                        TextButton(
-                                                          onPressed: () {
-                                                            deleteGoal(doc);
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop();
-                                                          },
-                                                          child: Text('Delete'),
-                                                        ),
-                                                      ],
-                                                    );
-                                                  });
-                                            },
-                                            icon: Icon(Icons.delete),
-                                          ),
-                                          Expanded(
-                                            child: Text(doc['goalName'],
-                                                style: TextStyle(
-                                                    color: Color.fromARGB(
-                                                        255, 0, 0, 0),
-                                                    fontWeight: FontWeight.bold,
-                                                    fontFamily: 'Rainbow',
-                                                    fontSize: 28.0)),
-                                          ),
-                                        ],
-                                      ), // Replace with your document field
-                                    );
-                                  },
-                                  body: FutureBuilder<QuerySnapshot>(
-                                    future:
-                                        doc.reference.collection('plans').get(),
-                                    builder: (context, PlansSnapshot) {
-                                      if (PlansSnapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return CircularProgressIndicator();
-                                      }
-                                      if (PlansSnapshot.hasData &&
-                                          PlansSnapshot.data!.docs.isNotEmpty) {
-                                        return Column(
-                                          children: PlansSnapshot.data!.docs
-                                              .map((planDoc) {
-                                            Map<String, dynamic> plansData =
-                                                planDoc.data()
-                                                    as Map<String, dynamic>;
-                                            return Container(
-                                              margin: EdgeInsets.symmetric(
-                                                  horizontal: 10.0,
-                                                  vertical: 5.0),
-                                              decoration: BoxDecoration(
-                                                color: Color.fromARGB(
-                                                    136, 239, 205, 221),
-                                                border: Border.all(
-                                                    color: Colors.grey,
-                                                    width: 2.0),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                              ),
-                                              child: ListTile(
-                                                title: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        plansData[
-                                                                'planContext'] ??
-                                                            'No Context',
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 18.0),
-                                                      ),
-                                                    ),
-                                                    IconButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  SleepEdit(
-                                                                      docID: widget
-                                                                          .docID,
-                                                                      goalID: doc
-                                                                          .id)),
-                                                        ).then((_) {
-                                                          refreshGoals();
-                                                        });
-                                                        // print(doc.id);
-                                                      },
-                                                      icon: Icon(Icons.edit),
-                                                    ),
-                                                    IconButton(
-                                                      onPressed: () async {
-                                                        showDialog(
-                                                            context: context,
-                                                            builder:
-                                                                (BuildContext
-                                                                    context) {
-                                                              return AlertDialog(
-                                                                title: Text(
-                                                                    "Confirm Delete"),
-                                                                content: Text(
-                                                                    'Are you sure you want to delete this plan'),
-                                                                actions: <Widget>[
-                                                                  TextButton(
-                                                                    onPressed:
-                                                                        () {
-                                                                      Navigator.of(
-                                                                              context)
-                                                                          .pop();
-                                                                    },
-                                                                    child: Text(
-                                                                        'Cancel'),
-                                                                  ),
-                                                                  TextButton(
-                                                                    child: Text(
-                                                                        "Delete"),
-                                                                    onPressed:
-                                                                        () {
-                                                                      deletePlanFromFirebase(
-                                                                          doc,
-                                                                          planDoc
-                                                                              .id);
-                                                                      Navigator.of(
-                                                                              context)
-                                                                          .pop();
-                                                                    },
-                                                                  ),
-                                                                ],
-                                                              );
-                                                            });
-                                                      },
-                                                      icon: Icon(Icons.delete),
-                                                    ),
-                                                  ],
-                                                ),
-                                                subtitle: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                        'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
-                                                    Text(
-                                                        'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        );
-                                      }
-                                      return Center(
-                                          child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: <Widget>[
-                                          Text(
-                                            'No plan exists',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 20.0),
-                                          ),
-                                          IconButton(
-                                            onPressed: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        SleepEdit(
-                                                            docID: widget.docID,
-                                                            goalID: doc.id)),
-                                              ).then((_) {
-                                                refreshGoals();
-                                              });
-                                            },
-                                            icon: Icon(Icons.edit),
-                                          ),
-                                        ],
-                                      ));
-                                    },
-                                  ),
-                                  isExpanded: _isOpen![index],
-                                );
+                                if (doc['type'] == "sleep") {
+                                  return createSleep(doc, index);
+                                } else if (doc['type'] ==
+                                        "sports-lose weight" ||
+                                    doc['type'] == "sports-muscle building") {
+                                  
+                                  return createSleep(doc, index);
+                                } else {
+                                  return createSports(doc, index);
+                                }
                               }).toList(),
                               // Replace with your document field
                               // Add other fields or widgets as needed
