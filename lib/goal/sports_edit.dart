@@ -4,62 +4,30 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:keeping_fit/goal/sleepTemplate.dart';
 
-class sportsTemplatePage extends StatefulWidget {
+class SportsEdit extends StatefulWidget {
   final String docID;
   final String goalID;
-  const sportsTemplatePage(
-      {super.key, required this.docID, required this.goalID});
+  const SportsEdit({super.key, required this.docID, required this.goalID});
 
   @override
-  State<sportsTemplatePage> createState() => _sportsTemplatePageState();
+  State<SportsEdit> createState() => _SportsEditState();
 }
 
-class PlanDetails {
-  String planContext;
-  DateTime whenToEnd;
-  int mintimes;
-  int complete;
-  String selectionOption;
-  int goalduration;
-  int completegoalduration = 0;
-  bool isSaved;
-  String? docID;
-  TextEditingController dateController;
-
-  PlanDetails({
-    this.planContext = '',
-    required this.whenToEnd,
-    this.mintimes = 0,
-    this.complete = 0,
-    this.selectionOption = 'frequency',
-    this.goalduration = 0,
-    this.completegoalduration = 0,
-    this.isSaved = false,
-    this.docID,
-  }) : dateController = TextEditingController(
-            text: DateFormat('yyyy-MM-dd').format(whenToEnd));
-
-  Map<String, dynamic> toMap() {
-    return {
-      'planContext': planContext,
-      'whenToEnd': whenToEnd,
-      'minimumCompletion': mintimes,
-      'complete': complete,
-      'select': selectionOption,
-      'duration': goalduration,
-      'completeduration': completegoalduration,
-    };
-  }
-}
-
-class _sportsTemplatePageState extends State<sportsTemplatePage> {
+class _SportsEditState extends State<SportsEdit> {
   final _goalNameController = TextEditingController();
   final _nowweightController = TextEditingController();
   final _goalweightController = TextEditingController();
   final _durationController = TextEditingController();
 
   List<PlanDetails> plans = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadGoalAndPlans();
+  }
 
   @override
   void dispose() {
@@ -70,27 +38,44 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
     super.dispose();
   }
 
-  void addPlan() {
-    setState(() {
-      plans.add(PlanDetails(whenToEnd: DateTime.now()));
-    });
-  }
-
-  Future addGoal() async {
-    String goalName = _goalNameController.text;
-    String nowWeight = _nowweightController.text;
-    String goalweight = _goalweightController.text;
-
-    await FirebaseFirestore.instance
+  void loadGoalAndPlans() async {
+    var goalDocument = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.docID)
         .collection('goal')
         .doc(widget.goalID)
-        .set({
-      'goalName': goalName,
-      'Weight': nowWeight,
-      'your goal': goalweight,
-    }, SetOptions(merge: true));
+        .get();
+    _goalNameController.text = goalDocument['goalName'];
+    _nowweightController.text = goalDocument['Weight'];
+    _goalweightController.text = goalDocument['your goal'];
+    // print(goalDocument['goalName']);
+
+    var planDocument = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.docID)
+        .collection('goal')
+        .doc(widget.goalID)
+        .collection('plans')
+        .get();
+    
+
+    setState(() {
+      plans = planDocument.docs.map((doc) {
+        var planData = doc.data();
+        // print(planData['planContext']);
+        // _durationController.text = planData['duration'];
+        return PlanDetails(
+          planContext: planData['planContext'],
+          whenToEnd: (planData['whenToEnd'] as Timestamp).toDate(),
+          mintimes: planData['minimumCompletion'],
+          selectionOption: planData['select'],
+          goalduration: planData['duration'],
+          completegoalduration: planData['completeduration'],
+          isSaved: true,
+          docID: doc.id,
+        );
+      }).toList();
+    });
   }
 
   void savePlans() async {
@@ -135,7 +120,29 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
     // );
   }
 
-///////////////////////////////////////
+  void addPlan() {
+    setState(() {
+      plans.add(PlanDetails(whenToEnd: DateTime.now()));
+    });
+  }
+
+  Future addGoal() async {
+    String goalName = _goalNameController.text;
+    String nowWeight = _nowweightController.text;
+    String goalweight = _goalweightController.text;
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.docID)
+        .collection('goal')
+        .doc(widget.goalID)
+        .set({
+      'goalName': goalName,
+      'Weight': nowWeight,
+      'your goal': goalweight,
+    }, SetOptions(merge: true));
+  }
+
   @override
   Widget _buildTextField(TextEditingController controller, String hintText,
       {Function(String)? onChanged, required PlanDetails plan}) {
@@ -155,8 +162,9 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
         },
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white),
+          labelText: hintText,
+          labelStyle: TextStyle(color: Colors.white),
+          border: OutlineInputBorder(),
           fillColor: Color.fromARGB(255, 106, 105, 105),
           filled: true,
           enabledBorder: OutlineInputBorder(
@@ -230,7 +238,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                   });
                 },
                 child: Text('Frequency'),
-                
+
                 // style: TextButton.styleFrom(
                 //   primary: plan.selectionOption == 'frequency' ? Colors.grey: Colors.white,
                 // ),
@@ -238,7 +246,9 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: plan.selectionOption == 'frequency' ? Color.fromARGB(255, 146, 214, 239) : const Color.fromARGB(255, 197, 202, 233),
+                  color: plan.selectionOption == 'frequency'
+                      ? Color.fromARGB(255, 146, 214, 239)
+                      : const Color.fromARGB(255, 197, 202, 233),
                   width: 4,
                 ),
               ),
@@ -260,27 +270,29 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: plan.selectionOption == 'duration' ? Color.fromARGB(255, 146, 214, 239) : const Color.fromARGB(255, 197, 202, 233),
+                  color: plan.selectionOption == 'duration'
+                      ? Color.fromARGB(255, 146, 214, 239)
+                      : const Color.fromARGB(255, 197, 202, 233),
                   width: 4,
                 ),
               ),
             ),
           ],
         ),
-        if(plan.selectionOption == 'frequency')
+        if (plan.selectionOption == 'frequency')
           Container(
             height: 75,
             padding: EdgeInsets.symmetric(horizontal: 50.0),
             child: CupertinoPicker(
               itemExtent: 32,
               backgroundColor: Colors.transparent,
-              onSelectedItemChanged: (int selectedIndex){
+              onSelectedItemChanged: (int selectedIndex) {
                 setState(() {
                   plan.mintimes = selectedIndex;
                   plan.isSaved = false;
                 });
               },
-              children: List<Widget>.generate(100, (index){
+              children: List<Widget>.generate(100, (index) {
                 return Center(
                   child: Text(
                     index.toString(),
@@ -288,40 +300,42 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                   ),
                 );
               }),
-            scrollController: FixedExtentScrollController(initialItem: plan.mintimes),
+              scrollController:
+                  FixedExtentScrollController(initialItem: plan.mintimes),
+            ),
           ),
-        ),
-        if(plan.selectionOption == 'duration')
+        if (plan.selectionOption == 'duration')
           Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28.0),
-          child: TextField(
-            controller: _durationController,
-            onChanged: (value) {
-              int? duration = int.tryParse(value);
-              if (duration != null && duration >= 0 && duration <= 300) {
-                setState(() {
-                  plan.goalduration = duration;
-                  plan.isSaved = false;
-                });
-              }
-            },
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: "Enter Duration (0-300 min)",
-              hintStyle: TextStyle(color: Colors.white),
-              fillColor: Color.fromARGB(255, 106, 105, 105),
-              filled: true,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white),
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            child: TextField(
+              controller: _durationController,
+              onChanged: (value) {
+                int? duration = int.tryParse(value);
+                if (duration != null && duration >= 0 && duration <= 300) {
+                  setState(() {
+                    plan.goalduration = duration;
+                    plan.isSaved = false;
+                  });
+                }
+              },
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Enter Duration (0-300 min)",
+                hintStyle: TextStyle(color: Colors.white),
+                fillColor: Color.fromARGB(255, 106, 105, 105),
+                filled: true,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -330,6 +344,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
   Widget _buildPlanCard(PlanDetails plan) {
     TextEditingController planContextController =
         TextEditingController(text: plan.planContext);
+    
     return Padding(
       key: ObjectKey(plan),
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
@@ -368,7 +383,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
               SizedBox(
                 height: 10.0,
               ),
-               _FrequencyandDuration(plan),
+              _FrequencyandDuration(plan),
               SizedBox(
                 height: 10.0,
               ),
@@ -391,18 +406,15 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       appBar: AppBar(
-        title: Text(
-          'Set Sports Goal',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: const Color.fromARGB(255, 158, 49, 178),
+        title: Text('Edit Goal'),
+        backgroundColor: Colors.grey,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 0.0),
+            child: Center(
+              child: Column(children: [
                 Icon(
                   Icons.sports,
                   size: 80,
@@ -414,10 +426,9 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                     controller: _goalNameController,
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Goal Name',
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                      ),
+                      labelText: 'Goal Name',
+                      labelStyle: TextStyle(color: Colors.grey),
+                      border: OutlineInputBorder(),
                       fillColor: Color.fromARGB(255, 47, 46, 46),
                       filled: true,
                       enabledBorder: OutlineInputBorder(
@@ -441,10 +452,9 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                           controller: _nowweightController,
                           style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            hintText: 'weight(kg)',
-                            hintStyle: TextStyle(
-                              color: Colors.white,
-                            ),
+                            labelText: 'Weight(kg)',
+                            labelStyle: TextStyle(color: Colors.grey),
+                            border: OutlineInputBorder(),
                             fillColor: Color.fromARGB(255, 47, 46, 46),
                             filled: true,
                             enabledBorder: OutlineInputBorder(
@@ -464,10 +474,9 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                           controller: _goalweightController,
                           style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            hintText: 'goal weight(kg)',
-                            hintStyle: TextStyle(
-                              color: Colors.white,
-                            ),
+                            labelText: 'Goal Weight(kg)',
+                            labelStyle: TextStyle(color: Colors.grey),
+                            border: OutlineInputBorder(),
                             fillColor: Color.fromARGB(255, 47, 46, 46),
                             filled: true,
                             enabledBorder: OutlineInputBorder(
@@ -483,9 +492,14 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                     ],
                   ),
                 ),
-                for (var plan in plans) ...[
-                  _buildPlanCard(plan),
-                ],
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: plans.length,
+                  itemBuilder: (context, index) {
+                    return _buildPlanCard(plans[index]);
+                  },
+                ),
                 ElevatedButton(
                   onPressed: addPlan,
                   child: Icon(Icons.add),
@@ -506,7 +520,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                   },
                   child: Text('Save Plan'),
                 ),
-              ],
+              ]),
             ),
           ),
         ),

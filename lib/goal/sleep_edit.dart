@@ -39,7 +39,7 @@ class _SleepEditState extends State<SleepEdit> {
         .doc(widget.goalID)
         .get();
     _goalNameController.text = goalDocument['goalName'];
-    print(goalDocument['goalName']);
+    // print(goalDocument['goalName']);
 
     var planDocument = await FirebaseFirestore.instance
         .collection('users')
@@ -52,7 +52,7 @@ class _SleepEditState extends State<SleepEdit> {
     setState(() {
       plans = planDocument.docs.map((doc) {
         var planData = doc.data();
-        print(planData['planContext']);
+        // print(planData['planContext']);
         return PlanDetails(
           planContext: planData['planContext'],
           whenToEnd: (planData['whenToEnd'] as Timestamp).toDate(),
@@ -257,7 +257,7 @@ class _SleepEditState extends State<SleepEdit> {
                     plan.isSaved = false;
                   }
                   // print(plan.mintimes);
-                  print(tempMintimes);
+                  // print(tempMintimes);
                   plan.mintimes = tempMintimes;
                 });
               },
@@ -354,6 +354,7 @@ class _SleepEditState extends State<SleepEdit> {
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Goal Name',
+                      labelStyle: TextStyle(color: Colors.grey),
                       border: OutlineInputBorder(),
                       fillColor: Color.fromARGB(255, 47, 46, 46),
                         filled: true,

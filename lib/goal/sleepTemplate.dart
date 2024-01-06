@@ -48,7 +48,7 @@ class PlanDetails {
       'complete': complete,
       'select': selectionOption,
       'duration': goalduration,
-      'completesports': completegoalduration,
+      'completeduration': completegoalduration,
     };
   }
 }

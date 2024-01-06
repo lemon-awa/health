@@ -5,6 +5,8 @@ import 'package:keeping_fit/goal/sleepTemplate.dart';
 import 'package:keeping_fit/goal/sleep_edit.dart';
 import 'package:keeping_fit/pages/set_goal_page.dart';
 
+import '../goal/sports_edit.dart';
+
 class GoalsTab extends StatefulWidget {
   final String docID;
   const GoalsTab({super.key, required this.docID});
@@ -104,6 +106,47 @@ class _GoalsTabState extends State<GoalsTab> {
   }
 
 // punch
+  Future<void> DurationPunch(
+      BuildContext context, DocumentSnapshot planDoc) async {
+    TextEditingController numberController = TextEditingController();
+    bool confirmed = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Confirm Punch'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Enter the time you will perform this task:'),
+                  TextField(
+                    controller: numberController,
+                    keyboardType: TextInputType.number,
+                  )
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (confirmed) {
+      int numberToAdd = int.tryParse(numberController.text) ?? 0;
+      await planDoc.reference
+          .update({'completeduration': FieldValue.increment(numberToAdd)});
+      refreshGoals();
+    }
+  }
+
   Future<void> SleepPunchPlan(
       BuildContext context, DocumentSnapshot planDoc) async {
     bool confirmed = await showDialog(
@@ -151,12 +194,22 @@ class _GoalsTabState extends State<GoalsTab> {
         ),
         IconButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      SleepEdit(docID: docID, goalID: goalID)),
-            ).then((_) => refreshGoals());
+            if (doc['type'] == 'sleep') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        SleepEdit(docID: docID, goalID: goalID)),
+              ).then((_) => refreshGoals());
+            } else if (doc['type'] == "sports - lose weight" ||
+                doc['type'] == "sports - muscle building") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        SportsEdit(docID: docID, goalID: goalID)),
+              ).then((_) => refreshGoals());
+            }
           },
           icon: Icon(Icons.edit),
         ),
@@ -192,7 +245,8 @@ class _GoalsTabState extends State<GoalsTab> {
   }
 
 // No plan exist
-  Widget noPlanWidget(BuildContext context, String docID, String goalID) {
+  Widget noPlanWidget(BuildContext context, QueryDocumentSnapshot doc,
+      String docID, String goalID) {
     return Center(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -203,14 +257,22 @@ class _GoalsTabState extends State<GoalsTab> {
           ),
           IconButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SleepEdit(docID: docID, goalID: goalID),
-                ),
-              ).then((_) {
-                refreshGoals();
-              });
+              if (doc['type'] == 'sleep') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SleepEdit(docID: docID, goalID: goalID)),
+                ).then((_) => refreshGoals());
+              } else if (doc['type'] == "sports - lose weight" ||
+                  doc['type'] == "sports - muscle building") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SportsEdit(docID: docID, goalID: goalID)),
+                ).then((_) => refreshGoals());
+              }
             },
             icon: Icon(Icons.edit),
           ),
@@ -268,7 +330,7 @@ class _GoalsTabState extends State<GoalsTab> {
               }).toList(),
             );
           }
-          return noPlanWidget(context, widget.docID, doc.id);
+          return noPlanWidget(context, doc, widget.docID, doc.id);
         },
       ),
       isExpanded: _isOpen![index],
@@ -293,37 +355,67 @@ class _GoalsTabState extends State<GoalsTab> {
               children: PlansSnapshot.data!.docs.map((planDoc) {
                 Map<String, dynamic> plansData =
                     planDoc.data() as Map<String, dynamic>;
-                return GestureDetector(
-                  onTap: () async {
-                    await SleepPunchPlan(context, planDoc);
-                  },
-                  child: Container(
-                    margin:
-                        EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(136, 239, 205, 221),
-                      border: Border.all(color: Colors.grey, width: 2.0),
-                      borderRadius: BorderRadius.circular(12.0),
+                if (plansData['selectionOption'] == 'frequency') {
+                  return GestureDetector(
+                    onTap: () async {
+                      await SleepPunchPlan(context, planDoc);
+                    },
+                    child: Container(
+                      margin:
+                          EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                      decoration: BoxDecoration(
+                        color: Color.fromARGB(136, 239, 205, 221),
+                        border: Border.all(color: Colors.grey, width: 2.0),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: ListTile(
+                        title: createPlanContext(context, doc, plansData,
+                            widget.docID, planDoc, doc.id),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
+                            Text(
+                                'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: ListTile(
-                      title: createPlanContext(context, doc, plansData,
-                          widget.docID, planDoc, doc.id),
-                      // subtitle: Column(
-                      //   crossAxisAlignment: CrossAxisAlignment.start,
-                      //   children: [
-                      //     Text(
-                      //         'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
-                      //     Text(
-                      //         'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
-                      //   ],
-                      // ),
+                  );
+                } else {
+                  return GestureDetector(
+                    onTap: () async {
+                      await DurationPunch(context, planDoc);
+                    },
+                    child: Container(
+                      margin:
+                          EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                      decoration: BoxDecoration(
+                        color: Color.fromARGB(136, 239, 205, 221),
+                        border: Border.all(color: Colors.grey, width: 2.0),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: ListTile(
+                        title: createPlanContext(context, doc, plansData,
+                            widget.docID, planDoc, doc.id),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                'Goal Duration: ${plansData['duration'].toString()},Completed:${plansData['completeduration'].toString()}'),
+                            Text(
+                                'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                );
+                  );
+                }
               }).toList(),
             );
           }
-          return noPlanWidget(context, widget.docID, doc.id);
+          return noPlanWidget(context, doc, widget.docID, doc.id);
         },
       ),
       isExpanded: _isOpen![index],
@@ -378,7 +470,7 @@ class _GoalsTabState extends State<GoalsTab> {
               }).toList(),
             );
           }
-          return noPlanWidget(context, widget.docID, doc.id);
+          return noPlanWidget(context, doc, widget.docID, doc.id);
         },
       ),
       isExpanded: _isOpen![index],
@@ -476,13 +568,13 @@ class _GoalsTabState extends State<GoalsTab> {
                                   .map<ExpansionPanel>((entry) {
                                 int index = entry.key;
                                 QueryDocumentSnapshot doc = entry.value;
+                                print(doc['type']);
                                 if (doc['type'] == "sleep") {
                                   return createSleep(doc, index);
                                 } else if (doc['type'] ==
-                                        "sports-lose weight" ||
-                                    doc['type'] == "sports-muscle building") {
-                                  
-                                  return createSleep(doc, index);
+                                        "sports - lose weight" ||
+                                    doc['type'] == "sports - muscle building") {
+                                  return createSports(doc, index);
                                 } else {
                                   return createSports(doc, index);
                                 }
