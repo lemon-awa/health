@@ -144,8 +144,9 @@ class _SleepEditState extends State<SleepEdit> {
         },
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white),
+          labelText: hintText,
+          labelStyle: TextStyle(color: Colors.white),
+          border: OutlineInputBorder(),
           fillColor: Color.fromARGB(255, 106, 105, 105),
           filled: true,
           enabledBorder: OutlineInputBorder(

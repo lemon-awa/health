@@ -64,6 +64,7 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
     super.dispose();
   }
 
+  
   void addPlan() {
     setState(() {
       plans.add(PlanDetails(whenToEnd: DateTime.now()));
@@ -125,7 +126,7 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
   }
 
 ///////////////////////////////////////
-  @override
+
   Widget _buildTextField(TextEditingController controller, String hintText,
       {Function(String)? onChanged, required PlanDetails plan}) {
     return Padding(
@@ -144,8 +145,9 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
         },
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white),
+          labelText: hintText,
+          labelStyle: TextStyle(color: Colors.white),
+          border: OutlineInputBorder(),
           fillColor: Color.fromARGB(255, 106, 105, 105),
           filled: true,
           enabledBorder: OutlineInputBorder(
@@ -161,7 +163,6 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
     );
   }
 
-  @override
   Widget _buildDateField(PlanDetails plan) {
     TextEditingController datacontroller = TextEditingController(
         text: DateFormat('yyyy-MM-dd').format(plan.whenToEnd));
@@ -199,7 +200,6 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
     );
   }
 
-  @override
   Widget _buildNumberPicker(PlanDetails plan) {
     int tempMintimes = plan.mintimes;
 
@@ -268,7 +268,6 @@ class _sleepTemplatePageState extends State<sleepTemplatePage> {
     );
   }
 
-  @override
   Widget _buildPlanCard(PlanDetails plan) {
     TextEditingController planContextController =
         TextEditingController(text: plan.planContext);

@@ -218,7 +218,6 @@ class _SportsEditState extends State<SportsEdit> {
     );
   }
 
-  // @override
   Widget _FrequencyandDuration(PlanDetails plan) {
     TextEditingController durationController =
         TextEditingController(text: plan.goalduration.toString());
@@ -238,7 +237,7 @@ class _SportsEditState extends State<SportsEdit> {
                   });
                 },
                 child: Text('Frequency'),
-
+                
                 // style: TextButton.styleFrom(
                 //   primary: plan.selectionOption == 'frequency' ? Colors.grey: Colors.white,
                 // ),
@@ -246,9 +245,7 @@ class _SportsEditState extends State<SportsEdit> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: plan.selectionOption == 'frequency'
-                      ? Color.fromARGB(255, 146, 214, 239)
-                      : const Color.fromARGB(255, 197, 202, 233),
+                  color: plan.selectionOption == 'frequency' ? Color.fromARGB(255, 146, 214, 239) : const Color.fromARGB(255, 197, 202, 233),
                   width: 4,
                 ),
               ),
@@ -270,29 +267,27 @@ class _SportsEditState extends State<SportsEdit> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: plan.selectionOption == 'duration'
-                      ? Color.fromARGB(255, 146, 214, 239)
-                      : const Color.fromARGB(255, 197, 202, 233),
+                  color: plan.selectionOption == 'duration' ? Color.fromARGB(255, 146, 214, 239) : const Color.fromARGB(255, 197, 202, 233),
                   width: 4,
                 ),
               ),
             ),
           ],
         ),
-        if (plan.selectionOption == 'frequency')
+        if(plan.selectionOption == 'frequency')
           Container(
             height: 75,
             padding: EdgeInsets.symmetric(horizontal: 50.0),
             child: CupertinoPicker(
               itemExtent: 32,
               backgroundColor: Colors.transparent,
-              onSelectedItemChanged: (int selectedIndex) {
+              onSelectedItemChanged: (int selectedIndex){
                 setState(() {
                   plan.mintimes = selectedIndex;
                   plan.isSaved = false;
                 });
               },
-              children: List<Widget>.generate(100, (index) {
+              children: List<Widget>.generate(100, (index){
                 return Center(
                   child: Text(
                     index.toString(),
@@ -300,42 +295,40 @@ class _SportsEditState extends State<SportsEdit> {
                   ),
                 );
               }),
-              scrollController:
-                  FixedExtentScrollController(initialItem: plan.mintimes),
-            ),
+            scrollController: FixedExtentScrollController(initialItem: plan.mintimes),
           ),
-        if (plan.selectionOption == 'duration')
+        ),
+        if(plan.selectionOption == 'duration')
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28.0),
-            child: TextField(
-              controller: _durationController,
-              onChanged: (value) {
-                int? duration = int.tryParse(value);
-                if (duration != null && duration >= 0 && duration <= 300) {
-                  setState(() {
-                    plan.goalduration = duration;
-                    plan.isSaved = false;
-                  });
-                }
-              },
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: "Enter Duration (0-300 min)",
-                hintStyle: TextStyle(color: Colors.white),
-                fillColor: Color.fromARGB(255, 106, 105, 105),
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white),
-                ),
+          padding: const EdgeInsets.symmetric(horizontal: 28.0),
+          child: TextField(
+            controller: _durationController,
+            onChanged: (value) {
+              int? duration = int.tryParse(value);
+              if (duration != null && duration >= 0 && duration <= 300) {
+                setState(() {
+                  plan.goalduration = duration;
+                  plan.isSaved = false;
+                });
+              }
+            },
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: "Enter Duration (0-300 min)",
+              hintStyle: TextStyle(color: Colors.white),
+              fillColor: Color.fromARGB(255, 106, 105, 105),
+              filled: true,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.white),
               ),
             ),
           ),
+        ),
       ],
     );
   }
@@ -383,7 +376,7 @@ class _SportsEditState extends State<SportsEdit> {
               SizedBox(
                 height: 10.0,
               ),
-              _FrequencyandDuration(plan),
+               _FrequencyandDuration(plan),
               SizedBox(
                 height: 10.0,
               ),

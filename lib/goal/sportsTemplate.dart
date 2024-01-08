@@ -69,7 +69,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
     _durationController.dispose();
     super.dispose();
   }
-
+  
   void addPlan() {
     setState(() {
       plans.add(PlanDetails(whenToEnd: DateTime.now()));
@@ -155,8 +155,9 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
         },
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white),
+          labelText: hintText,
+          labelStyle: TextStyle(color: Colors.white),
+          border: OutlineInputBorder(),
           fillColor: Color.fromARGB(255, 106, 105, 105),
           filled: true,
           enabledBorder: OutlineInputBorder(
@@ -307,6 +308,8 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
             },
             style: TextStyle(color: Colors.white),
             decoration: InputDecoration(
+              suffixText: 'min',
+              suffixStyle: TextStyle(color: Colors.white),
               hintText: "Enter Duration (0-300 min)",
               hintStyle: TextStyle(color: Colors.white),
               fillColor: Color.fromARGB(255, 106, 105, 105),
@@ -319,6 +322,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.white),
               ),
+              
             ),
           ),
         ),
@@ -330,6 +334,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
   Widget _buildPlanCard(PlanDetails plan) {
     TextEditingController planContextController =
         TextEditingController(text: plan.planContext);
+    
     return Padding(
       key: ObjectKey(plan),
       padding: const EdgeInsets.symmetric(horizontal: 15.0),

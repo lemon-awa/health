@@ -175,8 +175,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
                         goalID: goalID,
                       )),
             );
-          }
-          else if (mainType == 'sports') {
+          } else if (mainType == 'sports') {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -185,13 +184,16 @@ class _SetGoalPageState extends State<SetGoalPage> {
                         goalID: goalID,
                       )),
             );
-          } 
-          // else if (mainType == 'food') {
-          //   Navigator.push(
-          //     context,
-          //     MaterialPageRoute(builder: (context) => FoodTemplatePage()),
-          //   );
-          // }
+          } else if (mainType == 'food') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => FoodTemplatePage(
+                        docID: widget.docID,
+                        goalID: goalID,
+                      )),
+            );
+          }
         },
         child: Icon(Icons.check_box),
       ),

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:keeping_fit/goal/foodpunch.dart';
 import 'package:keeping_fit/goal/sleepTemplate.dart';
 import 'package:keeping_fit/goal/sleep_edit.dart';
 import 'package:keeping_fit/pages/set_goal_page.dart';
@@ -105,7 +106,7 @@ class _GoalsTabState extends State<GoalsTab> {
     );
   }
 
-// punch
+// clock in
   Future<void> DurationPunch(
       BuildContext context, DocumentSnapshot planDoc) async {
     TextEditingController numberController = TextEditingController();
@@ -113,11 +114,11 @@ class _GoalsTabState extends State<GoalsTab> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Confirm Punch'),
+              title: Text('Confirm Clock In'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Enter the time you will perform this task:'),
+                  Text('Enter the time you want to clock in:'),
                   TextField(
                     controller: numberController,
                     keyboardType: TextInputType.number,
@@ -153,8 +154,8 @@ class _GoalsTabState extends State<GoalsTab> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Confirm Punch'),
-              content: Text('Do you want to punch this plan?'),
+              title: Text('Confirm Clock In'),
+              content: Text('Do you want to clock in this plan?'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -203,6 +204,14 @@ class _GoalsTabState extends State<GoalsTab> {
               ).then((_) => refreshGoals());
             } else if (doc['type'] == "sports - lose weight" ||
                 doc['type'] == "sports - muscle building") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        SportsEdit(docID: docID, goalID: goalID)),
+              ).then((_) => refreshGoals());
+            } else {
+              //TODO food_edit
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -266,6 +275,14 @@ class _GoalsTabState extends State<GoalsTab> {
                 ).then((_) => refreshGoals());
               } else if (doc['type'] == "sports - lose weight" ||
                   doc['type'] == "sports - muscle building") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SportsEdit(docID: docID, goalID: goalID)),
+                ).then((_) => refreshGoals());
+              } else {
+                // TODO
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -355,7 +372,8 @@ class _GoalsTabState extends State<GoalsTab> {
               children: PlansSnapshot.data!.docs.map((planDoc) {
                 Map<String, dynamic> plansData =
                     planDoc.data() as Map<String, dynamic>;
-                if (plansData['selectionOption'] == 'frequency') {
+                // print(plansData['select']);
+                if (plansData['select'] == 'frequency') {
                   return GestureDetector(
                     onTap: () async {
                       await SleepPunchPlan(context, planDoc);
@@ -440,9 +458,18 @@ class _GoalsTabState extends State<GoalsTab> {
               children: PlansSnapshot.data!.docs.map((planDoc) {
                 Map<String, dynamic> plansData =
                     planDoc.data() as Map<String, dynamic>;
+                String planID = planDoc.id;
                 return GestureDetector(
                   onTap: () async {
-                    await SleepPunchPlan(context, planDoc);
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => FoodPunch(
+                              plansData: plansData,
+                              docID: widget.docID,
+                              goalID: doc.id,
+                              planID: planID)),
+                    );
                   },
                   child: Container(
                     margin:
@@ -568,7 +595,7 @@ class _GoalsTabState extends State<GoalsTab> {
                                   .map<ExpansionPanel>((entry) {
                                 int index = entry.key;
                                 QueryDocumentSnapshot doc = entry.value;
-                                print(doc['type']);
+                                //print(doc['type']);
                                 if (doc['type'] == "sleep") {
                                   return createSleep(doc, index);
                                 } else if (doc['type'] ==
@@ -576,7 +603,7 @@ class _GoalsTabState extends State<GoalsTab> {
                                     doc['type'] == "sports - muscle building") {
                                   return createSports(doc, index);
                                 } else {
-                                  return createSports(doc, index);
+                                  return createFood(doc, index);
                                 }
                               }).toList(),
                               // Replace with your document field

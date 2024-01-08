@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:keeping_fit/read%20data/get_user_data.dart';
+import 'package:keeping_fit/users/users_inf.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -37,6 +38,16 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          GestureDetector(
+            onTap:(){
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => UserInfoInputPage(docID: user.email!),
+              ));
+            },
+            child: Padding(
+              padding:const EdgeInsets.only(right: 10.0),
+              child: Icon(Icons.settings),
+            ),
+          ),
           GestureDetector(
             onTap: () {
               FirebaseAuth.instance.signOut();
