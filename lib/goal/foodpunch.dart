@@ -103,6 +103,7 @@ class _FoodPunchState extends State<FoodPunch> {
               onPressed: () => Navigator.of(context).pop(false),
               child: Text('No'),
             ),
+            TextButton(onPressed: ()=> Navigator.of(context).pop(CheckInData[focusedDay]), child: Text('Cancel'),),
           ],
         );
       },

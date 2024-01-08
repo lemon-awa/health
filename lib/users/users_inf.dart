@@ -15,15 +15,17 @@ class _UserInfoInputPageState extends State<UserInfoInputPage> {
   final _bodyfatrateController = TextEditingController();
   final _hiplineController = TextEditingController();
   final _waistlineController = TextEditingController();
+  double? _bmi;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _weightController.addListener(_updateBMI);
+    _heightController.addListener(_updateBMI);
   }
 
   Future save() async {
-    // print(widget.docID);
     addUserInf(
         _weightController.text.trim(),
         _heightController.text.trim(),
@@ -36,23 +38,31 @@ class _UserInfoInputPageState extends State<UserInfoInputPage> {
     DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.docID)
+        .collection('info').doc(widget.docID)
         .get();
 
-    Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-    setState(() {
-      _weightController.text = userData['weight']?.toString() ?? '';
-      _heightController.text = userData['height']?.toString() ?? '';
-      _bodyfatrateController.text = userData['body_fat']?.toString() ?? '';
-      _hiplineController.text = userData['hipline']?.toString() ?? '';
-      _waistlineController.text = userData['waistline']?.toString() ?? '';
-    });
-    print(userData['weight']);
-
-    if (userData['weight'] != '' && userData['height'] != '') {
-      FirebaseFirestore.instance.collection('users').doc(widget.docID).set({
-        'BMI': userData['weight'] /(userData['height']*userData['height']),
+    if (userDoc.exists) {
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+      setState(() {
+        _weightController.text = userData['weight']?.toString() ?? '';
+        _heightController.text = userData['height']?.toString() ?? '';
+        _bodyfatrateController.text = userData['body_fat']?.toString() ?? '';
+        _hiplineController.text = userData['hipline']?.toString() ?? '';
+        _waistlineController.text = userData['waistline']?.toString() ?? '';
+        _bmi = userData['BMI'];
       });
+      // if (userData['weight'] != '' && userData['height'] != '') {
+      //   FirebaseFirestore.instance
+      //       .collection('users')
+      //       .doc(widget.docID)
+      //       .collection('info')
+      //       .doc()
+      //       .set({
+      //     'BMI': userData['weight'] / (userData['height'] * userData['height']),
+      //   });
+      // }
     }
+    // print(userData['weight']);
   }
 
   @override
@@ -78,15 +88,46 @@ class _UserInfoInputPageState extends State<UserInfoInputPage> {
       bmi = weightVal / (heightVal * heightVal);
     }
 
-    await FirebaseFirestore.instance.collection('users').doc(widget.docID).set({
+    Map<String, dynamic> userData = {
       'weight': weightVal,
       'height': heightVal,
       'BMI': bmi,
       'body_fat': bodyFatVal,
       'hipline': hiplineVal,
       'waistline': waistlineVal,
-    }, SetOptions(merge: true));
+    };
+
+    DocumentReference userDocRef =
+        FirebaseFirestore.instance.collection('users').doc(widget.docID);
+    CollectionReference infoCollectionRef = userDocRef.collection('info');
+    await infoCollectionRef.doc(widget.docID).set(userData, SetOptions(merge: true));
     // print(widget.docID);
+  }
+
+  void _updateBMI() {
+    double? weightVal = double.tryParse(_weightController.text);
+    double? heightVal = double.tryParse(_heightController.text);
+
+    if (weightVal != null && heightVal != null && heightVal != 0) {
+      setState(() {
+        _bmi = weightVal / (heightVal * heightVal);
+      });
+    } else {
+      setState(() {
+        _bmi = null;
+      });
+    }
+  }
+
+  void _calculateAndSetBMI() {
+    double? weightVal = double.tryParse(_weightController.text);
+    double? heightVal = double.tryParse(_heightController.text);
+
+    if (weightVal != null && heightVal != null && heightVal != 0) {
+      setState(() {
+        _bmi = weightVal / (heightVal * heightVal);
+      });
+    }
   }
 
   @override
@@ -151,6 +192,19 @@ class _UserInfoInputPageState extends State<UserInfoInputPage> {
                   ),
                 ),
                 SizedBox(height: 10.0),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                  child: _bmi != null
+                      ? Text(
+                          'BMI: ${_bmi!.toStringAsFixed(2)}',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        )
+                      : Text(
+                          'BMI: Null',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                ),
+                SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28.0),
                   child: TextField(

@@ -26,6 +26,7 @@ class PlanDetails {
   bool isSaved;
   String? docID;
   TextEditingController dateController;
+  bool win;
 
   PlanDetails({
     this.planContext = '',
@@ -37,6 +38,7 @@ class PlanDetails {
     this.completegoalduration = 0,
     this.isSaved = false,
     this.docID,
+    this.win=false,
   }) : dateController = TextEditingController(
             text: DateFormat('yyyy-MM-dd').format(whenToEnd));
 
@@ -49,6 +51,7 @@ class PlanDetails {
       'select': selectionOption,
       'duration': goalduration,
       'completeduration': completegoalduration,
+      'win':win,
     };
   }
 }
