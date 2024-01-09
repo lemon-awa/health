@@ -4,99 +4,73 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:keeping_fit/goal/sleepTemplate.dart';
 
-class FoodTemplatePage extends StatefulWidget {
+class FoodEdit extends StatefulWidget {
   final String docID;
   final String goalID;
-  const FoodTemplatePage(
-      {super.key, required this.docID, required this.goalID});
+  const FoodEdit({super.key, required this.docID, required this.goalID});
 
   @override
-  State<FoodTemplatePage> createState() => _FoodTemplatePageState();
+  State<FoodEdit> createState() => _FoodEditState();
 }
 
-class PlanDetails {
-  String planContext;
-  DateTime whenToEnd;
-  int mintimes;
-  int complete;
-  String selectionOption;
-  int goalduration;
-  int completegoalduration = 0;
-  int? cal;
-  bool isSaved;
-  String? docID;
-  TextEditingController dateController;
-  bool win;
-
-  PlanDetails({
-    this.planContext = '',
-    required this.whenToEnd,
-    this.mintimes = 0,
-    this.complete = 0,
-    this.selectionOption = 'frequency',
-    this.goalduration = 0,
-    this.completegoalduration = 0,
-    this.cal,
-    this.isSaved = false,
-    this.docID,
-    this.win = false,
-  }) : dateController = TextEditingController(
-            text: DateFormat('yyyy-MM-dd').format(whenToEnd));
-
-  Map<String, dynamic> toMap() {
-    return {
-      'planContext': planContext,
-      'whenToEnd': whenToEnd,
-      'minimumCompletion': mintimes,
-      'complete': complete,
-      'select': selectionOption,
-      'duration': goalduration,
-      'completeduration': completegoalduration,
-      'cal': cal,
-      'win': win,
-    };
-  }
-}
-
-class _FoodTemplatePageState extends State<FoodTemplatePage> {
+class _FoodEditState extends State<FoodEdit> {
   final _goalNameController = TextEditingController();
   final _nowweightController = TextEditingController();
   final _goalweightController = TextEditingController();
-  final _durationController = TextEditingController();
-
   List<PlanDetails> plans = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadGoalAndPlans();
+  }
 
   @override
   void dispose() {
     _goalNameController.dispose();
     _nowweightController.dispose();
     _goalweightController.dispose();
-    _durationController.dispose();
     super.dispose();
   }
 
-  void addPlan() {
-    setState(() {
-      plans.add(PlanDetails(whenToEnd: DateTime.now()));
-    });
-  }
-
-  Future addGoal() async {
-    String goalName = _goalNameController.text;
-    String nowWeight = _nowweightController.text;
-    String goalweight = _goalweightController.text;
-
-    await FirebaseFirestore.instance
+  void loadGoalAndPlans() async {
+    var goalDocument = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.docID)
         .collection('goal')
         .doc(widget.goalID)
-        .set({
-      'goalName': goalName,
-      'Weight': nowWeight,
-      'your goal': goalweight,
-    }, SetOptions(merge: true));
+        .get();
+    _goalNameController.text = goalDocument['goalName'];
+    _nowweightController.text = goalDocument['Weight'];
+    _goalweightController.text = goalDocument['your goal'];
+    // print(goalDocument['goalName']);
+
+    var planDocument = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.docID)
+        .collection('goal')
+        .doc(widget.goalID)
+        .collection('plans')
+        .get();
+
+    setState(() {
+      plans = planDocument.docs.map((doc) {
+        var planData = doc.data();
+        // print(planData['planContext']);
+        return PlanDetails(
+          planContext: planData['planContext'],
+          whenToEnd: (planData['whenToEnd'] as Timestamp).toDate(),
+          mintimes: planData['minimumCompletion'],
+          complete: planData['complete'],
+          win: planData['win'],
+          cal: planData['cal'],
+          isSaved: true, 
+          docID: doc.id,
+        );
+      }).toList();
+    });
   }
 
   void savePlans() async {
@@ -141,7 +115,24 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
     // );
   }
 
-///////////////////////////////////////
+  void addPlan() {
+    setState(() {
+      plans.add(PlanDetails(whenToEnd: DateTime.now()));
+    });
+  }
+
+  Future addGoal() async {
+    String goalName = _goalNameController.text;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.docID)
+        .collection('goal')
+        .doc(widget.goalID)
+        .set({
+      'goalName': goalName,
+    }, SetOptions(merge: true));
+  }
+
   @override
   Widget _buildTextField(TextEditingController controller, String hintText,
       {Function(String)? onChanged, required PlanDetails plan}) {
@@ -217,6 +208,7 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
     );
   }
 
+  @override
   Widget _buildNumberPicker(PlanDetails plan) {
     int tempMintimes = plan.mintimes;
 
@@ -240,7 +232,7 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
           children: [
             Expanded(
               child: Container(
-                height: 75,
+                height: 100, // 调整滚轮高度
                 padding: EdgeInsets.symmetric(horizontal: 28.0), // 添加左边距
                 child: CupertinoPicker(
                   itemExtent: 32.0,
@@ -329,13 +321,12 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
               SizedBox(
                 height: 10.0,
               ),
+              SizedBox(height: 10),
               _buildTextField(
                   calContextController, "Maximum daily calorie intake",
                   onChanged: (value) => plan.cal = int.parse(value),
                   plan: plan),
-              SizedBox(height: 10),
               _buildNumberPicker(plan),
-              //  _FrequencyandDuration(plan),
               SizedBox(
                 height: 10.0,
               ),
@@ -358,20 +349,17 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       appBar: AppBar(
-        title: Text(
-          'Set Food Goal',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: const Color.fromARGB(255, 158, 49, 178),
+        title: Text('Edit Goal'),
+        backgroundColor: Colors.grey,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 0.0),
+            child: Center(
+              child: Column(children: [
                 Icon(
-                  Icons.food_bank,
+                  Icons.bed_outlined,
                   size: 80,
                   color: Color.fromARGB(255, 197, 206, 201),
                 ),
@@ -381,10 +369,9 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
                     controller: _goalNameController,
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Goal Name',
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                      ),
+                      labelText: 'Goal Name',
+                      labelStyle: TextStyle(color: Colors.grey),
+                      border: OutlineInputBorder(),
                       fillColor: Color.fromARGB(255, 47, 46, 46),
                       filled: true,
                       enabledBorder: OutlineInputBorder(
@@ -410,10 +397,9 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
                           decoration: InputDecoration(
                             suffixText: 'kg',
                             suffixStyle: TextStyle(color: Colors.white),
-                            hintText: 'weight(kg)',
-                            hintStyle: TextStyle(
-                              color: Colors.white,
-                            ),
+                            labelText: 'Weight(kg)',
+                            labelStyle: TextStyle(color: Colors.grey),
+                            border: OutlineInputBorder(),
                             fillColor: Color.fromARGB(255, 47, 46, 46),
                             filled: true,
                             enabledBorder: OutlineInputBorder(
@@ -435,10 +421,9 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
                           decoration: InputDecoration(
                             suffixText: 'kg',
                             suffixStyle: TextStyle(color: Colors.white),
-                            hintText: 'goal weight(kg)',
-                            hintStyle: TextStyle(
-                              color: Colors.white,
-                            ),
+                            labelText: 'Goal Weight(kg)',
+                            labelStyle: TextStyle(color: Colors.grey),
+                            border: OutlineInputBorder(),
                             fillColor: Color.fromARGB(255, 47, 46, 46),
                             filled: true,
                             enabledBorder: OutlineInputBorder(
@@ -454,10 +439,15 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 10),
-                for (var plan in plans) ...[
-                  _buildPlanCard(plan),
-                ],
+                SizedBox(height: 10.0),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: plans.length,
+                  itemBuilder: (context, index) {
+                    return _buildPlanCard(plans[index]);
+                  },
+                ),
                 ElevatedButton(
                   onPressed: addPlan,
                   child: Icon(Icons.add),
@@ -478,7 +468,7 @@ class _FoodTemplatePageState extends State<FoodTemplatePage> {
                   },
                   child: Text('Save Plan'),
                 ),
-              ],
+              ]),
             ),
           ),
         ),

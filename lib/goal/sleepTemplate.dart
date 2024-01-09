@@ -23,6 +23,7 @@ class PlanDetails {
   String selectionOption;
   int goalduration;
   int completegoalduration = 0;
+  int? cal;
   bool isSaved;
   String? docID;
   TextEditingController dateController;
@@ -36,9 +37,10 @@ class PlanDetails {
     this.selectionOption = 'frequency',
     this.goalduration = 0,
     this.completegoalduration = 0,
+    this.cal,
     this.isSaved = false,
     this.docID,
-    this.win=false,
+    this.win = false,
   }) : dateController = TextEditingController(
             text: DateFormat('yyyy-MM-dd').format(whenToEnd));
 
@@ -51,10 +53,12 @@ class PlanDetails {
       'select': selectionOption,
       'duration': goalduration,
       'completeduration': completegoalduration,
-      'win':win,
+      'cal':cal,
+      'win': win,
     };
   }
 }
+
 
 class _sleepTemplatePageState extends State<sleepTemplatePage> {
   final _goalNameController = TextEditingController();

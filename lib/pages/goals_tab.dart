@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:keeping_fit/goal/food_edit.dart';
 import 'package:keeping_fit/goal/foodpunch.dart';
 import 'package:keeping_fit/goal/sleepTemplate.dart';
 import 'package:keeping_fit/goal/sleep_edit.dart';
@@ -144,6 +145,16 @@ class _GoalsTabState extends State<GoalsTab> {
       int numberToAdd = int.tryParse(numberController.text) ?? 0;
       await planDoc.reference
           .update({'completeduration': FieldValue.increment(numberToAdd)});
+
+      DocumentSnapshot updatePlanDoc = await planDoc.reference.get();
+      Map<String, dynamic> updatedData =
+          updatePlanDoc.data() as Map<String, dynamic>;
+      if (updatedData['completeduration'] >= updatedData['duration']) {
+        await planDoc.reference.update({'win': true});
+      } else {
+        await planDoc.reference.update({'win': false});
+      }
+
       refreshGoals();
     }
   }
@@ -173,6 +184,16 @@ class _GoalsTabState extends State<GoalsTab> {
 
     if (confirmed) {
       await planDoc.reference.update({'complete': FieldValue.increment(1)});
+
+      DocumentSnapshot updatePlanDoc = await planDoc.reference.get();
+      Map<String, dynamic> updatedData =
+          updatePlanDoc.data() as Map<String, dynamic>;
+      if (updatedData['complete'] >= updatedData['minimumCompletion']) {
+        await planDoc.reference.update({'win': true});
+      } else {
+        await planDoc.reference.update({'win': false});
+      }
+
       refreshGoals();
     }
   }
@@ -216,7 +237,7 @@ class _GoalsTabState extends State<GoalsTab> {
                 context,
                 MaterialPageRoute(
                     builder: (context) =>
-                        SportsEdit(docID: docID, goalID: goalID)),
+                        FoodEdit(docID: docID, goalID: goalID)),
               ).then((_) => refreshGoals());
             }
           },
@@ -282,12 +303,11 @@ class _GoalsTabState extends State<GoalsTab> {
                           SportsEdit(docID: docID, goalID: goalID)),
                 ).then((_) => refreshGoals());
               } else {
-                // TODO
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          SportsEdit(docID: docID, goalID: goalID)),
+                          FoodEdit(docID: docID, goalID: goalID)),
                 ).then((_) => refreshGoals());
               }
             },
@@ -482,15 +502,16 @@ class _GoalsTabState extends State<GoalsTab> {
                     child: ListTile(
                       title: createPlanContext(context, doc, plansData,
                           widget.docID, planDoc, doc.id),
-                      // subtitle: Column(
-                      //   crossAxisAlignment: CrossAxisAlignment.start,
-                      //   children: [
-                      //     Text(
-                      //         'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
-                      //     Text(
-                      //         'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
-                      //   ],
-                      // ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Maximum daily calorie:${plansData['cal'].toString()}',style: TextStyle(color: const Color.fromARGB(255, 26, 101, 162),fontWeight: FontWeight.bold),),
+                          Text(
+                              'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
+                          Text(
+                              'due date: ${DateFormat('yyyy-MM-dd').format(plansData['whenToEnd'].toDate())}'),
+                        ],
+                      ),
                     ),
                   ),
                 );

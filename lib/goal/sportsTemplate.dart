@@ -23,6 +23,7 @@ class PlanDetails {
   String selectionOption;
   int goalduration;
   int completegoalduration = 0;
+  int? cal;
   bool isSaved;
   String? docID;
   TextEditingController dateController;
@@ -36,9 +37,10 @@ class PlanDetails {
     this.selectionOption = 'frequency',
     this.goalduration = 0,
     this.completegoalduration = 0,
+    this.cal,
     this.isSaved = false,
     this.docID,
-    this.win=false,
+    this.win = false,
   }) : dateController = TextEditingController(
             text: DateFormat('yyyy-MM-dd').format(whenToEnd));
 
@@ -51,10 +53,12 @@ class PlanDetails {
       'select': selectionOption,
       'duration': goalduration,
       'completeduration': completegoalduration,
-      'win':win,
+      'cal':cal,
+      'win': win,
     };
   }
 }
+
 
 class _sportsTemplatePageState extends State<sportsTemplatePage> {
   final _goalNameController = TextEditingController();
@@ -72,7 +76,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
     _durationController.dispose();
     super.dispose();
   }
-  
+
   void addPlan() {
     setState(() {
       plans.add(PlanDetails(whenToEnd: DateTime.now()));
@@ -234,7 +238,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                   });
                 },
                 child: Text('Frequency'),
-                
+
                 // style: TextButton.styleFrom(
                 //   primary: plan.selectionOption == 'frequency' ? Colors.grey: Colors.white,
                 // ),
@@ -242,7 +246,9 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: plan.selectionOption == 'frequency' ? Color.fromARGB(255, 146, 214, 239) : const Color.fromARGB(255, 197, 202, 233),
+                  color: plan.selectionOption == 'frequency'
+                      ? Color.fromARGB(255, 146, 214, 239)
+                      : const Color.fromARGB(255, 197, 202, 233),
                   width: 4,
                 ),
               ),
@@ -264,27 +270,29 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                  color: plan.selectionOption == 'duration' ? Color.fromARGB(255, 146, 214, 239) : const Color.fromARGB(255, 197, 202, 233),
+                  color: plan.selectionOption == 'duration'
+                      ? Color.fromARGB(255, 146, 214, 239)
+                      : const Color.fromARGB(255, 197, 202, 233),
                   width: 4,
                 ),
               ),
             ),
           ],
         ),
-        if(plan.selectionOption == 'frequency')
+        if (plan.selectionOption == 'frequency')
           Container(
             height: 75,
             padding: EdgeInsets.symmetric(horizontal: 50.0),
             child: CupertinoPicker(
               itemExtent: 32,
               backgroundColor: Colors.transparent,
-              onSelectedItemChanged: (int selectedIndex){
+              onSelectedItemChanged: (int selectedIndex) {
                 setState(() {
                   plan.mintimes = selectedIndex;
                   plan.isSaved = false;
                 });
               },
-              children: List<Widget>.generate(100, (index){
+              children: List<Widget>.generate(100, (index) {
                 return Center(
                   child: Text(
                     index.toString(),
@@ -292,43 +300,44 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                   ),
                 );
               }),
-            scrollController: FixedExtentScrollController(initialItem: plan.mintimes),
-          ),
-        ),
-        if(plan.selectionOption == 'duration')
-          Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28.0),
-          child: TextField(
-            controller: _durationController,
-            onChanged: (value) {
-              int? duration = int.tryParse(value);
-              if (duration != null && duration >= 0 && duration <= 300) {
-                setState(() {
-                  plan.goalduration = duration;
-                  plan.isSaved = false;
-                });
-              }
-            },
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              suffixText: 'min',
-              suffixStyle: TextStyle(color: Colors.white),
-              hintText: "Enter Duration (0-300 min)",
-              hintStyle: TextStyle(color: Colors.white),
-              fillColor: Color.fromARGB(255, 106, 105, 105),
-              filled: true,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white),
-              ),
-              
+              scrollController:
+                  FixedExtentScrollController(initialItem: plan.mintimes),
             ),
           ),
-        ),
+        if (plan.selectionOption == 'duration')
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            child: TextField(
+              controller: _durationController,
+              onChanged: (value) {
+                int? duration = int.tryParse(value);
+                if (duration != null && duration >= 0 && duration <= 300) {
+                  setState(() {
+                    plan.goalduration = duration;
+                    plan.isSaved = false;
+                  });
+                }
+              },
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                suffixText: 'min',
+                suffixStyle: TextStyle(color: Colors.white),
+                hintText: "Enter Duration (0-300 min)",
+                hintStyle: TextStyle(color: Colors.white),
+                fillColor: Color.fromARGB(255, 106, 105, 105),
+                filled: true,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      BorderSide(color: Color.fromARGB(255, 31, 30, 30)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -337,7 +346,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
   Widget _buildPlanCard(PlanDetails plan) {
     TextEditingController planContextController =
         TextEditingController(text: plan.planContext);
-    
+
     return Padding(
       key: ObjectKey(plan),
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
@@ -376,7 +385,7 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
               SizedBox(
                 height: 10.0,
               ),
-               _FrequencyandDuration(plan),
+              _FrequencyandDuration(plan),
               SizedBox(
                 height: 10.0,
               ),
@@ -449,6 +458,8 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                           controller: _nowweightController,
                           style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
+                            suffixText: 'kg',
+                            suffixStyle: TextStyle(color: Colors.white),
                             hintText: 'weight(kg)',
                             hintStyle: TextStyle(
                               color: Colors.white,
@@ -472,6 +483,8 @@ class _sportsTemplatePageState extends State<sportsTemplatePage> {
                           controller: _goalweightController,
                           style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
+                            suffixText: 'kg',
+                            suffixStyle: TextStyle(color: Colors.white),
                             hintText: 'goal weight(kg)',
                             hintStyle: TextStyle(
                               color: Colors.white,

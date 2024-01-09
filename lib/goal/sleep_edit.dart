@@ -57,6 +57,8 @@ class _SleepEditState extends State<SleepEdit> {
           planContext: planData['planContext'],
           whenToEnd: (planData['whenToEnd'] as Timestamp).toDate(),
           mintimes: planData['minimumCompletion'],
+          complete: planData['complete'],
+          win:planData['win'],
           isSaved: true,
           docID: doc.id,
         );

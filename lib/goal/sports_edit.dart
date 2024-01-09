@@ -68,9 +68,11 @@ class _SportsEditState extends State<SportsEdit> {
           planContext: planData['planContext'],
           whenToEnd: (planData['whenToEnd'] as Timestamp).toDate(),
           mintimes: planData['minimumCompletion'],
+          complete: planData['complete'],
           selectionOption: planData['select'],
           goalduration: planData['duration'],
           completegoalduration: planData['completeduration'],
+          win:planData['win'],
           isSaved: true,
           docID: doc.id,
         );
@@ -445,6 +447,8 @@ class _SportsEditState extends State<SportsEdit> {
                           controller: _nowweightController,
                           style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
+                            suffixText: 'kg',
+                            suffixStyle: TextStyle(color: Colors.white),
                             labelText: 'Weight(kg)',
                             labelStyle: TextStyle(color: Colors.grey),
                             border: OutlineInputBorder(),
@@ -467,6 +471,8 @@ class _SportsEditState extends State<SportsEdit> {
                           controller: _goalweightController,
                           style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
+                            suffixText: 'kg',
+                            suffixStyle: TextStyle(color: Colors.white),
                             labelText: 'Goal Weight(kg)',
                             labelStyle: TextStyle(color: Colors.grey),
                             border: OutlineInputBorder(),
