@@ -505,7 +505,12 @@ class _GoalsTabState extends State<GoalsTab> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Maximum daily calorie:${plansData['cal'].toString()}',style: TextStyle(color: const Color.fromARGB(255, 26, 101, 162),fontWeight: FontWeight.bold),),
+                          Text(
+                            'Maximum daily calorie:${plansData['cal'].toString()}',
+                            style: TextStyle(
+                                color: const Color.fromARGB(255, 26, 101, 162),
+                                fontWeight: FontWeight.bold),
+                          ),
                           Text(
                               'Plan Times: ${plansData['minimumCompletion'].toString()},Completed Times:${plansData['complete'].toString()}'),
                           Text(
@@ -544,6 +549,23 @@ class _GoalsTabState extends State<GoalsTab> {
                       fontFamily: 'Rubik Doodle Shadow',
                       fontWeight: FontWeight.bold,
                       fontSize: 25),
+                ),
+                FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context))
+                    ).then((_) {
+                      refreshGoals();
+                    });
+                  },
+                  backgroundColor: Color.fromARGB(255, 197, 181, 200),
+                  mini: true,
+                  child: Icon(
+                    Icons.workspace_premium,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
                 FloatingActionButton(
                   onPressed: () {
