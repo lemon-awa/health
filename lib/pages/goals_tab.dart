@@ -550,23 +550,23 @@ class _GoalsTabState extends State<GoalsTab> {
                       fontWeight: FontWeight.bold,
                       fontSize: 25),
                 ),
-                FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context))
-                    ).then((_) {
-                      refreshGoals();
-                    });
-                  },
-                  backgroundColor: Color.fromARGB(255, 197, 181, 200),
-                  mini: true,
-                  child: Icon(
-                    Icons.workspace_premium,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
+                // FloatingActionButton(
+                //   onPressed: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(builder: (context))
+                //     ).then((_) {
+                //       refreshGoals();
+                //     });
+                //   },
+                //   backgroundColor: Color.fromARGB(255, 197, 181, 200),
+                //   mini: true,
+                //   child: Icon(
+                //     Icons.workspace_premium,
+                //     color: Colors.white,
+                //     size: 20,
+                //   ),
+                // ),
                 FloatingActionButton(
                   onPressed: () {
                     Navigator.push(
